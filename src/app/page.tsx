@@ -44,7 +44,7 @@ export default function Home() {
         </div>
         <div>
           <Typography placeholder={"Toph1"} variant="paragraph">
-            - Vad finns det för skolor i Lund?
+            - Vad finns det för förskolor i Lund?
           </Typography>
         </div>
         <div>
@@ -85,6 +85,13 @@ export default function Home() {
           ) : (
             questionAnswer.answer && (
               <div>
+                <div>
+                  <Typography placeholder={"Toph1"} variant="paragraph">
+                    - {questionAnswer.question}
+                  </Typography>
+                </div>
+                <hr className="h-px my-4 bg-gray-400 border-0" />
+
                 <Typography placeholder={"Toph1"} variant="paragraph">
                   {questionAnswer.answer}
                 </Typography>

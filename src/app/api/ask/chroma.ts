@@ -35,9 +35,9 @@ async function get_chunked_documents(
     }
 
     const new_dict = {
-      id: id,
+      //id: id,
       source: source,
-      prompt_id: prompt_id,
+      //prompt_id: prompt_id,
       document: doc,
     };
     chunked_docs.push(new_dict);
@@ -82,11 +82,11 @@ async function get_summary_documents(
     }
 
     const newDict = {
-      category: category,
+      //category: category,
       source: source,
-      title: title,
-      summary: summary,
-      id: idValue,
+      //title: title,
+      document: summary,
+      //id: idValue,
     };
     documents.push(newDict);
   }

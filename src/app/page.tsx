@@ -2,18 +2,20 @@
 import { Button, Input, Typography, Spinner } from "@material-tailwind/react";
 import React from "react";
 import { QuestionAnswer } from "../types/questionAnswer";
-import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 
-const fetcher = (url: string, { arg }: { arg: { question: string } }) =>
-  fetch(url, {
+const fetcher = async (url: string, { arg }: { arg: { question: string } }) => {
+  const res = await fetch(url, {
     method: "POST",
     body: JSON.stringify(arg),
-  })
-    .then((res) => res.json())
-    .catch((error) => {
-      console.error("Error:", error);
-    });
+  });
+
+  if (!res.ok) {
+    throw new Error("Kunde inte hämta data. Försök igen.");
+  }
+
+  return res.json();
+};
 
 export default function Home() {
   const [question, setQuestion] = React.useState("");
@@ -25,10 +27,18 @@ export default function Home() {
   });
 
   const onClick = async () => {
-    const data = await trigger({ question });
-    setQuestionAnswer(data.questionAnswer);
-    setQuestion("");
-    console.log(data);
+    try {
+      const data = await trigger({ question });
+
+      setQuestionAnswer(data.questionAnswer);
+    } catch (e) {
+      setQuestion("");
+      setQuestionAnswer({
+        question: "",
+        answer: "",
+        sources: [],
+      });
+    }
   };
 
   const onChange = (event: React.ChangeEvent<HTMLInputElement>) =>
@@ -82,6 +92,12 @@ export default function Home() {
         <div className="mb-2 mt-8">
           {isMutating ? (
             <Spinner />
+          ) : error ? (
+            <div>
+              <Typography placeholder={"Toph1"} variant="paragraph">
+                {error.message}
+              </Typography>
+            </div>
           ) : (
             questionAnswer.answer && (
               <div>

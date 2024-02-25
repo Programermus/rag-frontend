@@ -1,0 +1,9 @@
+{
+  "apps": [
+    {
+      "name": "rag-frontend",
+      "script": "npm",
+      "args": "start"
+    }
+  ]
+}

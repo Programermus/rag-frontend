@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { ChromaClient } from "chromadb";
 import { OpenAIEmbeddingFunction } from "chromadb";
-import { rag2, expansion } from "./prompts";
+import { rag2, expansion, rag } from "./prompts";
 import { get_chunked_documents, get_summary_documents } from "./chroma";
 
 const openai = new OpenAI();
@@ -17,7 +17,7 @@ type PromptExpansion = {
 
 type UserPromptResponse = {
   answer: string;
-  source: string[];
+  sources: string[];
 };
 
 export async function POST(req: Request) {
@@ -26,6 +26,8 @@ export async function POST(req: Request) {
   const prompt_expansion = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     response_format: { type: "json_object" },
+    temperature: 0.2,
+    seed: 10,
     messages: [
       {
         role: "system",
@@ -39,10 +41,11 @@ export async function POST(req: Request) {
   });
 
   let ragContext = "";
+  let exp: PromptExpansion = { synonymous_prompts: [] };
 
   const res = prompt_expansion.choices[0].message.content;
   if (res) {
-    const exp: PromptExpansion = JSON.parse(res);
+    exp = JSON.parse(res);
 
     const chunksPromise = get_chunked_documents(
       exp.synonymous_prompts,
@@ -59,37 +62,46 @@ export async function POST(req: Request) {
       chunksPromise,
       summariesPromise,
     ]);
-
-    ragContext = JSON.stringify([summaries, { extra_context: chunks }]);
+    ragContext = JSON.stringify({
+      context: [...summaries, ...chunks],
+    });
   }
+
+  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+    {
+      role: "system",
+      content: rag(),
+    },
+    {
+      role: "system",
+      content: ragContext,
+    },
+    {
+      role: "user",
+      content: body.question,
+    },
+  ];
 
   const openai_resp = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
+    temperature: 0.5,
+    seed: 2,
     response_format: { type: "json_object" },
-    messages: [
-      {
-        role: "system",
-        content: rag2(),
-      },
-      {
-        role: "system",
-        content: ragContext,
-      },
-      {
-        role: "user",
-        content: body.question,
-      },
-    ],
+    messages: messages,
   });
+
+  console.log(openai_resp);
 
   const queryResponse: UserPromptResponse = JSON.parse(
     openai_resp.choices[0].message.content || ""
   );
 
+  console.log(queryResponse);
+
   const questionAnswer = {
     question: body.question,
     answer: queryResponse.answer,
-    sources: queryResponse.source,
+    sources: queryResponse.sources,
   };
   return new Response(
     JSON.stringify({

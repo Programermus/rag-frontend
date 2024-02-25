@@ -117,7 +117,7 @@ export default function Home() {
                       <a
                         href={source}
                         key={index}
-                        className="block font-sans text-base antialiased font-normal leading-relaxed transition-colors text-blue-gray-900 hover:text-blue-500 focus:text-blue-500"
+                        className="block font-sans text-base antialiased font-normal leading-relaxed transition-colors text-blue-gray-400 hover:text-blue-500 focus:text-blue-500"
                       >
                         <Typography placeholder={"listitem"} variant="small">
                           {source}
